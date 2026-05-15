@@ -118,7 +118,7 @@ function renderChoiceStep() {
   const multipleNote = step.multiple ? '<p class="note center-note">複数選択可</p>' : "";
   const nextButton = step.multiple ? '<button class="primary-button" type="button" id="multiNext" disabled>次へ</button>' : "";
   const back = state.currentStep > 1 ? '<button class="back-link" type="button" data-back>戻る</button>' : "";
-  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}<span class="form-mascot" aria-hidden="true"></span></div>${back}`;
+  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}<img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true"></div>${back}`;
 
   stepContainer.querySelectorAll("[data-choice]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -169,7 +169,7 @@ function renderZipStep() {
     <p class="error-text" id="zipError"></p>
     <div class="question-buttons has-mascot">
       <button class="primary-button" type="button" id="zipNext" disabled>残り2ステップ</button>
-      <span class="form-mascot" aria-hidden="true"></span>
+      <img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true">
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
@@ -217,7 +217,7 @@ function renderProfileStep() {
     <p class="error-text" id="profileError"></p>
     <div class="question-buttons has-mascot">
       <button class="primary-button" type="button" id="profileNext" disabled>残り1ステップ</button>
-      <span class="form-mascot" aria-hidden="true"></span>
+      <img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true">
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
@@ -267,7 +267,7 @@ function renderPhoneStep() {
     </label>
     <div class="question-buttons has-mascot">
       <button class="primary-button" type="submit" id="submitButton" disabled>無料で求人を見てみる</button>
-      <span class="form-mascot" aria-hidden="true"></span>
+      <img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true">
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;

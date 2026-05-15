@@ -422,12 +422,14 @@ body.modal-open .survey-brand-footer {
 
 .form-mascot {
   position: absolute;
-  right: -12px;
-  bottom: -12px;
-  z-index: 2;
+  right: -8px;
+  bottom: 2px;
+  z-index: 5;
+  display: block;
   width: clamp(58px, 17vw, 82px);
   aspect-ratio: 1;
-  background: url("assets/form-mascot.png") center / contain no-repeat;
+  height: auto;
+  object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 5px 8px rgba(20, 136, 138, 0.2));
 }
