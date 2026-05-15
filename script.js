@@ -71,6 +71,8 @@ const icsCalendarButton = document.getElementById("icsCalendarButton");
 const lineChatButton = document.getElementById("lineChatButton");
 const bookingHours = Array.from({ length: 11 }, (_, index) => String(index + 10).padStart(2, "0"));
 const bookingMinutes = ["00", "15", "30", "45"];
+const BUSINESS_START_HOUR = 10;
+const BUSINESS_END_HOUR = 20;
 const SPREADSHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwvb-2dIF4ZT9QVk41nRaMgwIIbSEdwUnkErtyvbSDLgtHUTGvhoqxPlU0ZyHr1Xf0xRw/exec";
 const LINE_CHAT_URL = "https://liff.line.me/2008784499-92DR4hmy/landing?follow=%40872lluqj&lp=7hDJTd&liff_id=2008784499-92DR4hmy";
 let allBookingDates = [];
@@ -550,9 +552,11 @@ function renderDateOptions() {
     button.addEventListener("click", () => {
       state.answers.bookingDate = button.dataset.date;
       state.answers.bookingDateIso = button.dataset.dateIso;
+      resetBookingTime();
       dateGrid.querySelectorAll(".date-option").forEach((item) => item.classList.remove("is-selected"));
       button.classList.add("is-selected");
       showBookingCard("time");
+      renderTimeOptions();
       updateBookingState();
       updateBookingMascot();
     });
@@ -560,19 +564,21 @@ function renderDateOptions() {
 }
 
 function renderTimeOptions() {
+  const availableHours = getAvailableHoursForSelectedDate();
+  const availableMinutes = getAvailableMinutesForSelectedHour();
   timeGrid.innerHTML = `
     <label class="time-select-wrap">
       <span>時間</span>
       <select id="bookingHour">
         <option value="">選択</option>
-        ${bookingHours.map((hour) => `<option value="${hour}" ${state.answers.bookingHour === hour ? "selected" : ""}>${Number(hour)}時</option>`).join("")}
+        ${availableHours.map((hour) => `<option value="${hour}" ${state.answers.bookingHour === hour ? "selected" : ""}>${Number(hour)}時</option>`).join("")}
       </select>
     </label>
     <label class="time-select-wrap">
       <span>分</span>
-      <select id="bookingMinute">
+      <select id="bookingMinute" ${state.answers.bookingHour ? "" : "disabled"}>
         <option value="">選択</option>
-        ${bookingMinutes.map((minute) => `<option value="${minute}" ${state.answers.bookingMinute === minute ? "selected" : ""}>${minute}分</option>`).join("")}
+        ${availableMinutes.map((minute) => `<option value="${minute}" ${state.answers.bookingMinute === minute ? "selected" : ""}>${minute}分</option>`).join("")}
       </select>
     </label>
   `;
@@ -580,11 +586,16 @@ function renderTimeOptions() {
   const hourSelect = document.getElementById("bookingHour");
   const minuteSelect = document.getElementById("bookingMinute");
   const updateTime = () => {
+    const previousHour = state.answers.bookingHour;
     state.answers.bookingHour = hourSelect.value;
-    state.answers.bookingMinute = minuteSelect.value;
+    state.answers.bookingMinute = previousHour === state.answers.bookingHour ? minuteSelect.value : "";
     state.answers.bookingTime = state.answers.bookingHour && state.answers.bookingMinute
       ? `${state.answers.bookingHour}:${state.answers.bookingMinute}〜`
       : "";
+    if (previousHour !== state.answers.bookingHour) {
+      renderTimeOptions();
+      return;
+    }
     if (state.answers.bookingTime) {
       showBookingCard("email");
     }
@@ -596,24 +607,106 @@ function renderTimeOptions() {
   minuteSelect.addEventListener("change", updateTime);
 }
 
+function resetBookingTime() {
+  state.answers.bookingHour = "";
+  state.answers.bookingMinute = "";
+  state.answers.bookingTime = "";
+}
+
+function parseIsoDateOnly(iso) {
+  if (!iso) {
+    return null;
+  }
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function isSameCalendarDate(dateA, dateB) {
+  return dateA && dateB &&
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate();
+}
+
+function getNextBookableMinuteInfo() {
+  const now = new Date();
+  const next = new Date(now.getTime());
+  next.setSeconds(0, 0);
+  const remainder = next.getMinutes() % 15;
+  if (remainder !== 0) {
+    next.setMinutes(next.getMinutes() + (15 - remainder));
+  }
+  if (remainder === 0) {
+    next.setMinutes(next.getMinutes() + 15);
+  }
+  return next;
+}
+
+function hasAvailableSlotOnDate(date) {
+  const now = new Date();
+  if (!isSameCalendarDate(date, now)) {
+    return true;
+  }
+  const next = getNextBookableMinuteInfo();
+  return next.getHours() < BUSINESS_END_HOUR;
+}
+
+function getAvailableHoursForSelectedDate() {
+  const selectedDate = parseIsoDateOnly(state.answers.bookingDateIso);
+  if (!selectedDate) {
+    return bookingHours;
+  }
+  const now = new Date();
+  const next = getNextBookableMinuteInfo();
+  return bookingHours.filter((hour) => {
+    const numericHour = Number(hour);
+    if (numericHour >= BUSINESS_END_HOUR) {
+      return false;
+    }
+    return !isSameCalendarDate(selectedDate, now) || numericHour >= next.getHours();
+  });
+}
+
+function getAvailableMinutesForSelectedHour() {
+  if (!state.answers.bookingHour) {
+    return [];
+  }
+  const selectedDate = parseIsoDateOnly(state.answers.bookingDateIso);
+  const selectedHour = Number(state.answers.bookingHour);
+  const now = new Date();
+  const next = getNextBookableMinuteInfo();
+
+  return bookingMinutes.filter((minute) => {
+    if (selectedHour >= BUSINESS_END_HOUR) {
+      return false;
+    }
+    if (!isSameCalendarDate(selectedDate, now)) {
+      return true;
+    }
+    const numericMinute = Number(minute);
+    return selectedHour > next.getHours() || (selectedHour === next.getHours() && numericMinute >= next.getMinutes());
+  });
+}
+
 function getBookingDates() {
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
   const dates = [];
   const today = new Date();
 
-  for (let offset = 0; offset <= 6; offset += 1) {
-    if (offset === 2) {
+  for (let offset = 0; dates.length < 6; offset += 1) {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+    if (!hasAvailableSlotOnDate(date)) {
       continue;
     }
-    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const weekday = weekdays[date.getDay()];
+    const visibleIndex = dates.length;
     dates.push({
       value: `${month}/${day}(${weekday})`,
       iso: `${date.getFullYear()}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
       label: offset === 0 ? "今日" : offset === 1 ? "明日" : `${month}/${day}`,
-      weekday: offset <= 1 ? `(${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")})` : `(${weekday})`
+      weekday: visibleIndex < 2 ? `(${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")})` : `(${weekday})`
     });
   }
 

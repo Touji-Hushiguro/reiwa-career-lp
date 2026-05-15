@@ -700,6 +700,13 @@ body.modal-open .survey-brand-footer {
   box-shadow: 3px 4px var(--main);
 }
 
+.time-select-wrap select:disabled {
+  border-color: #ccc;
+  background: #f4f4f4;
+  color: #999;
+  box-shadow: none;
+}
+
 .select-like {
   display: flex;
   justify-content: center;
