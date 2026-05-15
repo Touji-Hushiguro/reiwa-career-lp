@@ -118,7 +118,7 @@ function renderChoiceStep() {
   const multipleNote = step.multiple ? '<p class="note center-note">複数選択可</p>' : "";
   const nextButton = step.multiple ? '<button class="primary-button" type="button" id="multiNext" disabled>次へ</button>' : "";
   const back = state.currentStep > 1 ? '<button class="back-link" type="button" data-back>戻る</button>' : "";
-  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}${mascotImage("form-mascot is-corner")}</div>${back}`;
+  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}</div>${back}${guideMascotMarkup("guideMascot")}`;
 
   stepContainer.querySelectorAll("[data-choice]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -126,6 +126,7 @@ function renderChoiceStep() {
         toggleMultiChoice(step.key, button.dataset.choice);
         button.classList.toggle("is-selected");
         updateMultiNextButton(step.key);
+        updateChoiceMascot(step);
       } else {
         state.answers[step.key] = button.dataset.choice;
         button.classList.add("is-selected");
@@ -141,6 +142,7 @@ function renderChoiceStep() {
   }
 
   bindBackLink();
+  updateChoiceMascot(step);
 }
 
 function toggleMultiChoice(key, choice) {
@@ -171,6 +173,7 @@ function renderZipStep() {
       <button class="primary-button" type="button" id="zipNext" disabled>残り2ステップ</button>
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
+    ${guideMascotMarkup("guideMascot")}
   `;
 
   const zipInput = document.getElementById("zip");
@@ -183,7 +186,7 @@ function renderZipStep() {
     const valid = /^\d{7}$/.test(state.answers.zip);
     nextButton.disabled = !valid;
     error.textContent = state.answers.zip && !valid ? "7桁の数字で入力してください" : "";
-    placeGuideMascot(document.querySelector(`[data-guide="${valid ? "zipSubmit" : "zip"}"]`), valid ? "form-mascot is-corner" : "form-mascot field-mascot");
+    moveGuideMascot(getGuideElement(valid ? "zipSubmit" : "zip"));
   };
 
   zipInput.addEventListener("input", validate);
@@ -219,6 +222,7 @@ function renderProfileStep() {
       <button class="primary-button" type="button" id="profileNext" disabled>残り1ステップ</button>
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
+    ${guideMascotMarkup("guideMascot")}
   `;
 
   const inputs = {
@@ -269,6 +273,7 @@ function renderPhoneStep() {
       <button class="primary-button" type="submit" id="submitButton" disabled>無料で求人を見てみる</button>
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
+    ${guideMascotMarkup("guideMascot")}
   `;
 
   const phoneInput = document.getElementById("phone");
@@ -309,15 +314,44 @@ function onlyDigits(value) {
   return value.replace(/\D/g, "");
 }
 
-function mascotImage(className) {
-  return `<img class="${className}" src="assets/form-mascot.png" alt="" aria-hidden="true">`;
+function guideMascotMarkup(id) {
+  return `<span class="guide-mascot" id="${id}" aria-hidden="true"><img src="assets/form-mascot.png" alt=""></span>`;
 }
 
-function placeGuideMascot(target, className) {
-  stepContainer.querySelectorAll(".field-mascot, .is-corner").forEach((mascot) => mascot.remove());
-  if (target) {
-    target.insertAdjacentHTML("beforeend", mascotImage(className));
+function getGuideElement(name) {
+  const guide = stepContainer.querySelector(`[data-guide="${name}"]`);
+  if (!guide) {
+    return null;
   }
+  return guide.querySelector("input, select, button") || guide;
+}
+
+function moveMascotInContainer(mascot, container, target) {
+  if (!mascot || !container || !target) {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const size = mascot.offsetWidth || 64;
+    const left = targetRect.right - containerRect.left - size + 6;
+    const top = targetRect.top - containerRect.top + (targetRect.height / 2) - (size / 2);
+    mascot.style.left = `${Math.max(0, left)}px`;
+    mascot.style.top = `${Math.max(0, top)}px`;
+  });
+}
+
+function moveGuideMascot(target) {
+  moveMascotInContainer(document.getElementById("guideMascot"), stepContainer, target);
+}
+
+function updateChoiceMascot(step) {
+  const selected = step.multiple ? state.answers[step.key].length > 0 : false;
+  const target = selected
+    ? document.getElementById("multiNext")
+    : stepContainer.querySelector("[data-choice]");
+  moveGuideMascot(target);
 }
 
 function updateProfileMascot(validBirthDate) {
@@ -330,11 +364,7 @@ function updateProfileMascot(validBirthDate) {
         : !state.answers.residency
           ? "residency"
           : "profileSubmit";
-  const isSubmit = nextTarget === "profileSubmit";
-  placeGuideMascot(
-    document.querySelector(`[data-guide="${nextTarget}"]`),
-    isSubmit ? "form-mascot is-corner" : "form-mascot field-mascot"
-  );
+  moveGuideMascot(getGuideElement(nextTarget));
 }
 
 function updatePhoneMascot(validPhone) {
@@ -343,11 +373,7 @@ function updatePhoneMascot(validPhone) {
     : !state.answers.consent
       ? "consent"
       : "phoneSubmit";
-  const isSubmit = nextTarget === "phoneSubmit";
-  placeGuideMascot(
-    document.querySelector(`[data-guide="${nextTarget}"]`),
-    isSubmit ? "form-mascot is-corner" : "form-mascot field-mascot"
-  );
+  moveGuideMascot(getGuideElement(nextTarget));
 }
 
 function isValidBirthDate(value) {
@@ -485,6 +511,9 @@ function renderBookingOptions() {
   timesExpanded = false;
   renderDateOptions();
   renderTimeOptions();
+  if (!document.getElementById("bookingGuideMascot")) {
+    bookingPanel.insertAdjacentHTML("beforeend", guideMascotMarkup("bookingGuideMascot"));
+  }
 
   methodGrid.querySelectorAll("[data-method]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -492,17 +521,20 @@ function renderBookingOptions() {
       methodGrid.querySelectorAll(".booking-option").forEach((item) => item.classList.remove("is-selected"));
       button.classList.add("is-selected");
       showBookingCard("date");
+      updateBookingMascot();
     });
   });
 
   moreDatesButton.addEventListener("click", () => {
     datesExpanded = !datesExpanded;
     renderDateOptions();
+    updateBookingMascot();
   });
 
   moreTimesButton.addEventListener("click", () => {
     timesExpanded = !timesExpanded;
     renderTimeOptions();
+    updateBookingMascot();
   });
 
   bookingEmail.addEventListener("input", () => {
@@ -513,6 +545,7 @@ function renderBookingOptions() {
   googleCalendarButton.addEventListener("click", openGoogleCalendar);
   icsCalendarButton.addEventListener("click", downloadIcsCalendar);
   updateBookingState();
+  updateBookingMascot();
 }
 
 function renderDateOptions() {
@@ -534,6 +567,7 @@ function renderDateOptions() {
       button.classList.add("is-selected");
       showBookingCard("time");
       updateBookingState();
+      updateBookingMascot();
     });
   });
 }
@@ -556,6 +590,7 @@ function renderTimeOptions() {
       button.classList.add("is-selected");
       showBookingCard("email");
       updateBookingState();
+      updateBookingMascot();
     });
   });
 }
@@ -592,6 +627,24 @@ function showBookingCard(cardName) {
 function updateBookingState() {
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.answers.bookingEmail);
   bookingSubmit.disabled = !(state.answers.bookingMethod && state.answers.bookingDate && state.answers.bookingTime && validEmail);
+  updateBookingMascot();
+}
+
+function updateBookingMascot() {
+  if (!bookingPanel || bookingPanel.hidden) {
+    return;
+  }
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.answers.bookingEmail);
+  const target = !state.answers.bookingMethod
+    ? methodGrid.querySelector("[data-method]")
+    : !state.answers.bookingDate
+      ? dateGrid.querySelector(".date-option")
+      : !state.answers.bookingTime
+        ? timeGrid.querySelector(".time-option")
+        : !validEmail
+          ? bookingEmail
+          : bookingSubmit;
+  moveMascotInContainer(document.getElementById("bookingGuideMascot"), bookingPanel, target);
 }
 
 async function confirmBooking() {

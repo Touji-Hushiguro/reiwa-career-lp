@@ -381,6 +381,10 @@ body.modal-open .survey-brand-footer {
   text-align: center;
 }
 
+#stepContainer {
+  position: relative;
+}
+
 .step-title {
   margin: 0 0 18px;
   color: var(--text);
@@ -420,26 +424,23 @@ body.modal-open .survey-brand-footer {
   padding-bottom: 8px;
 }
 
-.form-mascot {
+.guide-mascot {
   position: absolute;
   z-index: 5;
   display: block;
   width: clamp(58px, 17vw, 82px);
   aspect-ratio: 1;
+  pointer-events: none;
+  transition: left 0.75s cubic-bezier(0.22, 1, 0.36, 1), top 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.guide-mascot img {
+  display: block;
+  width: 100%;
   height: auto;
   object-fit: contain;
-  pointer-events: none;
   filter: drop-shadow(0 5px 8px rgba(20, 136, 138, 0.2));
   animation: mascotFloat 2.5s ease-in-out infinite;
-}
-
-.form-mascot.is-corner {
-  right: -8px;
-  bottom: 2px;
-}
-
-.guide-field {
-  position: relative;
 }
 
 .field.guide-field input,
@@ -449,18 +450,6 @@ body.modal-open .survey-brand-footer {
 
 .consent.guide-field {
   padding-right: 58px;
-}
-
-.field .field-mascot {
-  right: -16px;
-  top: 27px;
-  width: clamp(50px, 14vw, 66px);
-}
-
-.consent .field-mascot {
-  right: -12px;
-  top: -20px;
-  width: clamp(48px, 14vw, 64px);
 }
 
 @keyframes mascotFloat {
@@ -621,6 +610,7 @@ body.modal-open .survey-brand-footer {
 }
 
 .booking-panel {
+  position: relative;
   display: grid;
   gap: 6px;
 }
