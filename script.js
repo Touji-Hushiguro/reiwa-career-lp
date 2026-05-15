@@ -14,6 +14,8 @@ const state = {
     bookingMethod: "",
     bookingDate: "",
     bookingDateIso: "",
+    bookingHour: "",
+    bookingMinute: "",
     bookingTime: "",
     bookingEmail: ""
   }
@@ -64,17 +66,15 @@ const bookingSubmit = document.getElementById("bookingSubmit");
 const completeDate = document.getElementById("completeDate");
 const completeMethod = document.getElementById("completeMethod");
 const moreDatesButton = document.getElementById("moreDatesButton");
-const moreTimesButton = document.getElementById("moreTimesButton");
 const googleCalendarButton = document.getElementById("googleCalendarButton");
 const icsCalendarButton = document.getElementById("icsCalendarButton");
 const lineChatButton = document.getElementById("lineChatButton");
-const primaryBookingTimes = ["14:00〜", "19:00〜"];
-const extraBookingTimes = ["10:00〜", "11:00〜", "16:00〜", "18:00〜"];
+const bookingHours = Array.from({ length: 11 }, (_, index) => String(index + 10).padStart(2, "0"));
+const bookingMinutes = ["00", "15", "30", "45"];
 const SPREADSHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwvb-2dIF4ZT9QVk41nRaMgwIIbSEdwUnkErtyvbSDLgtHUTGvhoqxPlU0ZyHr1Xf0xRw/exec";
 const LINE_CHAT_URL = "https://liff.line.me/2008784499-92DR4hmy/landing?follow=%40872lluqj&lp=7hDJTd&liff_id=2008784499-92DR4hmy";
 let allBookingDates = [];
 let datesExpanded = false;
-let timesExpanded = false;
 
 function renderStep() {
   progressText.textContent = `STEP ${state.currentStep} / 6`;
@@ -502,7 +502,6 @@ function finishSurvey() {
 function renderBookingOptions() {
   allBookingDates = getBookingDates();
   datesExpanded = false;
-  timesExpanded = false;
   renderDateOptions();
   renderTimeOptions();
   if (!document.getElementById("bookingGuideMascot")) {
@@ -522,12 +521,6 @@ function renderBookingOptions() {
   moreDatesButton.addEventListener("click", () => {
     datesExpanded = !datesExpanded;
     renderDateOptions();
-    updateBookingMascot();
-  });
-
-  moreTimesButton.addEventListener("click", () => {
-    timesExpanded = !timesExpanded;
-    renderTimeOptions();
     updateBookingMascot();
   });
 
@@ -567,45 +560,61 @@ function renderDateOptions() {
 }
 
 function renderTimeOptions() {
-  const visibleTimes = timesExpanded ? [...primaryBookingTimes, ...extraBookingTimes] : primaryBookingTimes;
-  timeGrid.innerHTML = visibleTimes
-    .map((time) => {
-      const selectedClass = state.answers.bookingTime === time ? " is-selected" : "";
-      return `<button class="time-option${selectedClass}" type="button" data-time="${time}">${time}</button>`;
-    })
-    .join("");
+  timeGrid.innerHTML = `
+    <label class="time-select-wrap">
+      <span>時間</span>
+      <select id="bookingHour">
+        <option value="">選択</option>
+        ${bookingHours.map((hour) => `<option value="${hour}" ${state.answers.bookingHour === hour ? "selected" : ""}>${Number(hour)}時</option>`).join("")}
+      </select>
+    </label>
+    <label class="time-select-wrap">
+      <span>分</span>
+      <select id="bookingMinute">
+        <option value="">選択</option>
+        ${bookingMinutes.map((minute) => `<option value="${minute}" ${state.answers.bookingMinute === minute ? "selected" : ""}>${minute}分</option>`).join("")}
+      </select>
+    </label>
+  `;
 
-  moreTimesButton.innerHTML = timesExpanded ? '時間を閉じる <span>▲</span>' : 'その他の時間 <span>▼</span>';
-
-  timeGrid.querySelectorAll("[data-time]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.answers.bookingTime = button.dataset.time;
-      timeGrid.querySelectorAll(".time-option").forEach((item) => item.classList.remove("is-selected"));
-      button.classList.add("is-selected");
+  const hourSelect = document.getElementById("bookingHour");
+  const minuteSelect = document.getElementById("bookingMinute");
+  const updateTime = () => {
+    state.answers.bookingHour = hourSelect.value;
+    state.answers.bookingMinute = minuteSelect.value;
+    state.answers.bookingTime = state.answers.bookingHour && state.answers.bookingMinute
+      ? `${state.answers.bookingHour}:${state.answers.bookingMinute}〜`
+      : "";
+    if (state.answers.bookingTime) {
       showBookingCard("email");
-      updateBookingState();
-      updateBookingMascot();
-    });
-  });
+    }
+    updateBookingState();
+    updateBookingMascot();
+  };
+
+  hourSelect.addEventListener("change", updateTime);
+  minuteSelect.addEventListener("change", updateTime);
 }
 
 function getBookingDates() {
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
   const dates = [];
-  const cursor = new Date();
-  cursor.setDate(cursor.getDate() + 1);
+  const today = new Date();
 
-  while (dates.length < 6) {
-    const day = cursor.getDay();
-    if (day !== 0 && day !== 6) {
-      dates.push({
-        value: `${cursor.getMonth() + 1}/${cursor.getDate()}(${weekdays[day]})`,
-        iso: `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`,
-        label: dates.length === 0 ? `明日` : `${cursor.getMonth() + 1}/${cursor.getDate()}`,
-        weekday: dates.length === 0 ? `(${String(cursor.getMonth() + 1).padStart(2, "0")}/${String(cursor.getDate()).padStart(2, "0")})` : `(${weekdays[day]})`
-      });
+  for (let offset = 0; offset <= 6; offset += 1) {
+    if (offset === 2) {
+      continue;
     }
-    cursor.setDate(cursor.getDate() + 1);
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekday = weekdays[date.getDay()];
+    dates.push({
+      value: `${month}/${day}(${weekday})`,
+      iso: `${date.getFullYear()}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+      label: offset === 0 ? "今日" : offset === 1 ? "明日" : `${month}/${day}`,
+      weekday: offset <= 1 ? `(${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")})` : `(${weekday})`
+    });
   }
 
   return dates;
@@ -633,11 +642,13 @@ function updateBookingMascot() {
     ? methodGrid.querySelector("[data-method]")
     : !state.answers.bookingDate
       ? dateGrid.querySelector(".date-option")
-      : !state.answers.bookingTime
-        ? timeGrid.querySelector(".time-option")
-        : !validEmail
-          ? bookingEmail
-          : bookingSubmit;
+      : !state.answers.bookingHour
+        ? document.getElementById("bookingHour")
+        : !state.answers.bookingMinute
+          ? document.getElementById("bookingMinute")
+          : !validEmail
+            ? bookingEmail
+            : bookingSubmit;
   moveMascotInContainer(document.getElementById("bookingGuideMascot"), bookingPanel, target);
 }
 

@@ -629,6 +629,7 @@ body.modal-open .survey-brand-footer {
 
 .time-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
 }
 
 .booking-card {
@@ -650,8 +651,7 @@ body.modal-open .survey-brand-footer {
 }
 
 .booking-option,
-.date-option,
-.time-option {
+.date-option {
   min-height: 48px;
   padding: 8px 6px;
   border: 2px solid var(--main);
@@ -673,11 +673,31 @@ body.modal-open .survey-brand-footer {
 }
 
 .booking-option.is-selected,
-.date-option.is-selected,
-.time-option.is-selected {
+.date-option.is-selected {
   background: var(--main);
   color: #fff;
   box-shadow: none;
+}
+
+.time-select-wrap {
+  display: grid;
+  gap: 6px;
+  color: var(--main-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.time-select-wrap select {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 34px 8px 12px;
+  border: 2px solid var(--main);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 3px 4px var(--main);
 }
 
 .select-like {
