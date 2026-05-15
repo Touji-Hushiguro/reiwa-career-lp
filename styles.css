@@ -412,6 +412,26 @@ body.modal-open .survey-brand-footer {
   box-shadow: none;
 }
 
+.question-buttons {
+  position: relative;
+}
+
+.question-buttons.has-mascot {
+  padding-bottom: 8px;
+}
+
+.form-mascot {
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  z-index: 2;
+  width: clamp(58px, 17vw, 82px);
+  aspect-ratio: 1;
+  background: url("assets/form-mascot.png") center / contain no-repeat;
+  pointer-events: none;
+  filter: drop-shadow(0 5px 8px rgba(20, 136, 138, 0.2));
+}
+
 .primary-button,
 .app-cta {
   min-height: 48px;

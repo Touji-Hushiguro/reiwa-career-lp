@@ -118,7 +118,7 @@ function renderChoiceStep() {
   const multipleNote = step.multiple ? '<p class="note center-note">複数選択可</p>' : "";
   const nextButton = step.multiple ? '<button class="primary-button" type="button" id="multiNext" disabled>次へ</button>' : "";
   const back = state.currentStep > 1 ? '<button class="back-link" type="button" data-back>戻る</button>' : "";
-  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}${buttons}${nextButton}${back}`;
+  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}<span class="form-mascot" aria-hidden="true"></span></div>${back}`;
 
   stepContainer.querySelectorAll("[data-choice]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -167,7 +167,10 @@ function renderZipStep() {
     </div>
     <p class="note">※ 郵便番号を入れていただくことで、お住まいの地域に合わせた求人をご紹介しやすくなります</p>
     <p class="error-text" id="zipError"></p>
-    <button class="primary-button" type="button" id="zipNext" disabled>残り2ステップ</button>
+    <div class="question-buttons has-mascot">
+      <button class="primary-button" type="button" id="zipNext" disabled>残り2ステップ</button>
+      <span class="form-mascot" aria-hidden="true"></span>
+    </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
 
@@ -212,7 +215,10 @@ function renderProfileStep() {
       </select>
     </div>
     <p class="error-text" id="profileError"></p>
-    <button class="primary-button" type="button" id="profileNext" disabled>残り1ステップ</button>
+    <div class="question-buttons has-mascot">
+      <button class="primary-button" type="button" id="profileNext" disabled>残り1ステップ</button>
+      <span class="form-mascot" aria-hidden="true"></span>
+    </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
 
@@ -259,7 +265,10 @@ function renderPhoneStep() {
       <input id="consent" type="checkbox" ${state.answers.consent ? "checked" : ""}>
       <span><a href="https://box-hr.co.jp/terms/" target="_blank" rel="noopener">利用規約</a> / プライバシーポリシーを読んで、サービス利用に同意する</span>
     </label>
-    <button class="primary-button" type="submit" id="submitButton" disabled>無料で求人を見てみる</button>
+    <div class="question-buttons has-mascot">
+      <button class="primary-button" type="submit" id="submitButton" disabled>無料で求人を見てみる</button>
+      <span class="form-mascot" aria-hidden="true"></span>
+    </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
 
