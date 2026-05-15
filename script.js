@@ -118,7 +118,7 @@ function renderChoiceStep() {
   const multipleNote = step.multiple ? '<p class="note center-note">複数選択可</p>' : "";
   const nextButton = step.multiple ? '<button class="primary-button" type="button" id="multiNext" disabled>次へ</button>' : "";
   const back = state.currentStep > 1 ? '<button class="back-link" type="button" data-back>戻る</button>' : "";
-  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}<img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true"></div>${back}`;
+  stepContainer.innerHTML = `<h1 class="step-title">${step.title}</h1>${multipleNote}<div class="question-buttons has-mascot">${buttons}${nextButton}${mascotImage("form-mascot is-corner")}</div>${back}`;
 
   stepContainer.querySelectorAll("[data-choice]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -161,15 +161,14 @@ function updateMultiNextButton(key) {
 function renderZipStep() {
   stepContainer.innerHTML = `
     <h1 class="step-title">お住まいの郵便番号</h1>
-    <div class="field">
+    <div class="field guide-field" data-guide="zip">
       <label for="zip">お住まいの郵便番号</label>
       <input id="zip" name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="7" placeholder="例: 1234567" value="${escapeHtml(state.answers.zip)}">
     </div>
     <p class="note">※ 郵便番号を入れていただくことで、お住まいの地域に合わせた求人をご紹介しやすくなります</p>
     <p class="error-text" id="zipError"></p>
-    <div class="question-buttons has-mascot">
+    <div class="question-buttons has-mascot" data-guide="zipSubmit">
       <button class="primary-button" type="button" id="zipNext" disabled>残り2ステップ</button>
-      <img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true">
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
@@ -184,6 +183,7 @@ function renderZipStep() {
     const valid = /^\d{7}$/.test(state.answers.zip);
     nextButton.disabled = !valid;
     error.textContent = state.answers.zip && !valid ? "7桁の数字で入力してください" : "";
+    placeGuideMascot(document.querySelector(`[data-guide="${valid ? "zipSubmit" : "zip"}"]`), valid ? "form-mascot is-corner" : "form-mascot field-mascot");
   };
 
   zipInput.addEventListener("input", validate);
@@ -196,28 +196,27 @@ function renderZipStep() {
 function renderProfileStep() {
   stepContainer.innerHTML = `
     <h1 class="step-title">プロフィールを教えてください</h1>
-    <div class="field">
+    <div class="field guide-field" data-guide="birthDate">
       <label for="birthDate">生年月日</label>
       <input id="birthDate" name="birthDate" inputmode="numeric" autocomplete="bday" maxlength="8" placeholder="例: 19900602" value="${escapeHtml(state.answers.birthDate)}">
     </div>
-    <div class="field">
+    <div class="field guide-field" data-guide="name">
       <label for="name">お名前</label>
       <input id="name" name="name" autocomplete="name" placeholder="例: 山田太郎" value="${escapeHtml(state.answers.name)}">
     </div>
-    <div class="field">
+    <div class="field guide-field" data-guide="kana">
       <label for="kana">フリガナ（カタカナ）</label>
       <input id="kana" name="kana" placeholder="例: ヤマダタロウ" value="${escapeHtml(state.answers.kana)}">
     </div>
-    <div class="field">
+    <div class="field guide-field" data-guide="residency">
       <label for="residency">在留資格など、該当するものをお選びください</label>
       <select id="residency" name="residency">
         ${residencyOptions.map((option, index) => `<option value="${index === 0 ? "" : option}" ${state.answers.residency === option ? "selected" : ""}>${option}</option>`).join("")}
       </select>
     </div>
     <p class="error-text" id="profileError"></p>
-    <div class="question-buttons has-mascot">
+    <div class="question-buttons has-mascot" data-guide="profileSubmit">
       <button class="primary-button" type="button" id="profileNext" disabled>残り1ステップ</button>
-      <img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true">
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
@@ -243,6 +242,7 @@ function renderProfileStep() {
     const valid = validBirthDate && state.answers.name && state.answers.kana && state.answers.residency;
     nextButton.disabled = !valid;
     error.textContent = state.answers.birthDate && !validBirthDate ? "生年月日は19900602のように8桁で入力してください" : "";
+    updateProfileMascot(validBirthDate);
   };
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", validate));
@@ -256,18 +256,17 @@ function renderProfileStep() {
 function renderPhoneStep() {
   stepContainer.innerHTML = `
     <h1 class="step-title">電話番号</h1>
-    <div class="field">
+    <div class="field guide-field" data-guide="phone">
       <label for="phone">電話番号</label>
       <input id="phone" name="phone" inputmode="tel" autocomplete="tel" maxlength="11" placeholder="例: 09012345678" value="${escapeHtml(state.answers.phone)}">
     </div>
     <p class="error-text" id="phoneError">正しい電話番号を入力してください</p>
-    <label class="consent">
+    <label class="consent guide-field" data-guide="consent">
       <input id="consent" type="checkbox" ${state.answers.consent ? "checked" : ""}>
       <span><a href="https://box-hr.co.jp/terms/" target="_blank" rel="noopener">利用規約</a> / プライバシーポリシーを読んで、サービス利用に同意する</span>
     </label>
-    <div class="question-buttons has-mascot">
+    <div class="question-buttons has-mascot" data-guide="phoneSubmit">
       <button class="primary-button" type="submit" id="submitButton" disabled>無料で求人を見てみる</button>
-      <img class="form-mascot" src="assets/form-mascot.png" alt="" aria-hidden="true">
     </div>
     <button class="back-link" type="button" data-back>戻る</button>
   `;
@@ -284,6 +283,7 @@ function renderPhoneStep() {
     const validPhone = /^\d{10,11}$/.test(state.answers.phone);
     submitButton.disabled = !(validPhone && state.answers.consent);
     error.style.visibility = state.answers.phone && !validPhone ? "visible" : "hidden";
+    updatePhoneMascot(validPhone);
   };
 
   phoneInput.addEventListener("input", validate);
@@ -307,6 +307,47 @@ function goToStep(step) {
 
 function onlyDigits(value) {
   return value.replace(/\D/g, "");
+}
+
+function mascotImage(className) {
+  return `<img class="${className}" src="assets/form-mascot.png" alt="" aria-hidden="true">`;
+}
+
+function placeGuideMascot(target, className) {
+  stepContainer.querySelectorAll(".field-mascot, .is-corner").forEach((mascot) => mascot.remove());
+  if (target) {
+    target.insertAdjacentHTML("beforeend", mascotImage(className));
+  }
+}
+
+function updateProfileMascot(validBirthDate) {
+  const nextTarget = !validBirthDate
+    ? "birthDate"
+    : !state.answers.name
+      ? "name"
+      : !state.answers.kana
+        ? "kana"
+        : !state.answers.residency
+          ? "residency"
+          : "profileSubmit";
+  const isSubmit = nextTarget === "profileSubmit";
+  placeGuideMascot(
+    document.querySelector(`[data-guide="${nextTarget}"]`),
+    isSubmit ? "form-mascot is-corner" : "form-mascot field-mascot"
+  );
+}
+
+function updatePhoneMascot(validPhone) {
+  const nextTarget = !validPhone
+    ? "phone"
+    : !state.answers.consent
+      ? "consent"
+      : "phoneSubmit";
+  const isSubmit = nextTarget === "phoneSubmit";
+  placeGuideMascot(
+    document.querySelector(`[data-guide="${nextTarget}"]`),
+    isSubmit ? "form-mascot is-corner" : "form-mascot field-mascot"
+  );
 }
 
 function isValidBirthDate(value) {

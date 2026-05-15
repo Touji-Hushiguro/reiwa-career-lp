@@ -422,8 +422,6 @@ body.modal-open .survey-brand-footer {
 
 .form-mascot {
   position: absolute;
-  right: -8px;
-  bottom: 2px;
   z-index: 5;
   display: block;
   width: clamp(58px, 17vw, 82px);
@@ -432,6 +430,48 @@ body.modal-open .survey-brand-footer {
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 5px 8px rgba(20, 136, 138, 0.2));
+  animation: mascotFloat 2.5s ease-in-out infinite;
+}
+
+.form-mascot.is-corner {
+  right: -8px;
+  bottom: 2px;
+}
+
+.guide-field {
+  position: relative;
+}
+
+.field.guide-field input,
+.field.guide-field select {
+  padding-right: 72px;
+}
+
+.consent.guide-field {
+  padding-right: 58px;
+}
+
+.field .field-mascot {
+  right: -16px;
+  top: 27px;
+  width: clamp(50px, 14vw, 66px);
+}
+
+.consent .field-mascot {
+  right: -12px;
+  top: -20px;
+  width: clamp(48px, 14vw, 64px);
+}
+
+@keyframes mascotFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
 }
 
 .primary-button,
