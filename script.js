@@ -73,9 +73,11 @@ const moreDatesButton = document.getElementById("moreDatesButton");
 const moreTimesButton = document.getElementById("moreTimesButton");
 const googleCalendarButton = document.getElementById("googleCalendarButton");
 const icsCalendarButton = document.getElementById("icsCalendarButton");
+const lineChatButton = document.getElementById("lineChatButton");
 const primaryBookingTimes = ["14:00〜", "19:00〜"];
 const extraBookingTimes = ["10:00〜", "11:00〜", "16:00〜", "18:00〜"];
 const SPREADSHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwvb-2dIF4ZT9QVk41nRaMgwIIbSEdwUnkErtyvbSDLgtHUTGvhoqxPlU0ZyHr1Xf0xRw/exec";
+const LINE_CHAT_URL = "https://liff.line.me/2008784499-92DR4hmy/landing?follow=%40872lluqj&lp=7hDJTd&liff_id=2008784499-92DR4hmy";
 let allBookingDates = [];
 let datesExpanded = false;
 let timesExpanded = false;
@@ -573,9 +575,17 @@ function formatCalendarDate(date) {
 function getCalendarEvent() {
   const start = getBookingStartDate();
   const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const method = state.answers.bookingMethod || "未選択";
+  const label = `${state.answers.bookingDate || ""} ${state.answers.bookingTime || ""}`.trim();
   return {
     title: "れいわキャリア 無料面談",
-    details: `面談方法: ${state.answers.bookingMethod}\\n担当アドバイザーとの無料面談です。`,
+    details: [
+      `面談方法: ${method}`,
+      label ? `予約日時: ${label}` : "",
+      "担当アドバイザーとの無料面談です。",
+      "当日は登録いただいた電話番号、またはオンライン面談にてご案内します。"
+    ].filter(Boolean).join("\n"),
+    location: method === "オンライン" ? "オンライン" : "電話",
     start,
     end
   };
@@ -588,6 +598,7 @@ function openGoogleCalendar() {
     text: event.title,
     dates: `${formatCalendarDate(event.start)}/${formatCalendarDate(event.end)}`,
     details: event.details,
+    location: event.location,
     ctz: "Asia/Tokyo"
   });
   window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, "_blank", "noopener");
@@ -627,6 +638,7 @@ function downloadIcsCalendar() {
     `DTEND;TZID=Asia/Tokyo:${formatCalendarDate(event.end)}`,
     `SUMMARY:${escapeIcsText(event.title)}`,
     `DESCRIPTION:${escapeIcsText(event.details)}`,
+    `LOCATION:${escapeIcsText(event.location)}`,
     "END:VEVENT",
     "END:VCALENDAR"
   ].join("\r\n");
@@ -638,6 +650,12 @@ function downloadIcsCalendar() {
   link.click();
   URL.revokeObjectURL(link.href);
   link.remove();
+}
+
+if (lineChatButton) {
+  lineChatButton.addEventListener("click", () => {
+    window.open(LINE_CHAT_URL, "_blank", "noopener");
+  });
 }
 
 surveyForm.addEventListener("submit", async (event) => {
