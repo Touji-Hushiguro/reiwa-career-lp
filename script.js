@@ -5,7 +5,7 @@ const state = {
     timing: "",
     jobTypes: [],
     zip: "",
-    birthYear: "",
+    birthDate: "",
     name: "",
     kana: "",
     residency: "",
@@ -194,8 +194,8 @@ function renderProfileStep() {
   stepContainer.innerHTML = `
     <h1 class="step-title">プロフィールを教えてください</h1>
     <div class="field">
-      <label for="birthYear">生まれ年</label>
-      <input id="birthYear" name="birthYear" inputmode="numeric" maxlength="4" placeholder="例: 1998" value="${escapeHtml(state.answers.birthYear)}">
+      <label for="birthDate">生年月日</label>
+      <input id="birthDate" name="birthDate" inputmode="numeric" autocomplete="bday" maxlength="8" placeholder="例: 19900602" value="${escapeHtml(state.answers.birthDate)}">
     </div>
     <div class="field">
       <label for="name">お名前</label>
@@ -217,7 +217,7 @@ function renderProfileStep() {
   `;
 
   const inputs = {
-    birthYear: document.getElementById("birthYear"),
+    birthDate: document.getElementById("birthDate"),
     name: document.getElementById("name"),
     kana: document.getElementById("kana"),
     residency: document.getElementById("residency")
@@ -226,17 +226,17 @@ function renderProfileStep() {
   const error = document.getElementById("profileError");
 
   const validate = () => {
-    state.answers.birthYear = onlyDigits(inputs.birthYear.value).slice(0, 4);
-    inputs.birthYear.value = state.answers.birthYear;
+    state.answers.birthDate = onlyDigits(inputs.birthDate.value).slice(0, 8);
+    inputs.birthDate.value = state.answers.birthDate;
     state.answers.name = inputs.name.value.trim();
     state.answers.kana = toKatakana(inputs.kana.value.trim());
     inputs.kana.value = state.answers.kana;
     state.answers.residency = inputs.residency.value;
 
-    const year = Number(state.answers.birthYear);
-    const valid = year >= 1950 && year <= 2010 && state.answers.name && state.answers.kana && state.answers.residency;
+    const validBirthDate = isValidBirthDate(state.answers.birthDate);
+    const valid = validBirthDate && state.answers.name && state.answers.kana && state.answers.residency;
     nextButton.disabled = !valid;
-    error.textContent = state.answers.birthYear && (year < 1950 || year > 2010) ? "生まれ年は1950〜2010の数字で入力してください" : "";
+    error.textContent = state.answers.birthDate && !validBirthDate ? "生年月日は19900602のように8桁で入力してください" : "";
   };
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", validate));
@@ -244,7 +244,7 @@ function renderProfileStep() {
   nextButton.addEventListener("click", () => goToStep(6));
   bindBackLink();
   validate();
-  inputs.birthYear.focus();
+  inputs.birthDate.focus();
 }
 
 function renderPhoneStep() {
@@ -257,7 +257,7 @@ function renderPhoneStep() {
     <p class="error-text" id="phoneError">正しい電話番号を入力してください</p>
     <label class="consent">
       <input id="consent" type="checkbox" ${state.answers.consent ? "checked" : ""}>
-      <span>利用規約 / プライバシーポリシーを読んで、サービス利用に同意する</span>
+      <span><a href="https://box-hr.co.jp/terms/" target="_blank" rel="noopener">利用規約</a> / プライバシーポリシーを読んで、サービス利用に同意する</span>
     </label>
     <button class="primary-button" type="submit" id="submitButton" disabled>無料で求人を見てみる</button>
     <button class="back-link" type="button" data-back>戻る</button>
@@ -298,6 +298,20 @@ function goToStep(step) {
 
 function onlyDigits(value) {
   return value.replace(/\D/g, "");
+}
+
+function isValidBirthDate(value) {
+  if (!/^\d{8}$/.test(value)) {
+    return false;
+  }
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(4, 6));
+  const day = Number(value.slice(6, 8));
+  if (year < 1950 || year > 2010 || month < 1 || month > 12 || day < 1 || day > 31) {
+    return false;
+  }
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
 
 function toKatakana(value) {
@@ -360,7 +374,7 @@ function buildSubmissionPayload(stage) {
     education: state.answers.zip,
     employmentStatus: state.answers.residency,
     fullName: getMergedFullName(),
-    birthDate: state.answers.birthYear,
+    birthDate: state.answers.birthDate,
     gender: "",
     phone: state.answers.phone,
     email: isFinal ? state.answers.bookingEmail : "",

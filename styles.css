@@ -509,6 +509,12 @@ body.modal-open .survey-brand-footer {
   accent-color: var(--main-dark);
 }
 
+.consent a {
+  color: var(--main-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .thanks-main {
   padding: 24px 14px 28px;
 }
