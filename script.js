@@ -43,13 +43,7 @@ const residencyOptions = [
   "日本国籍",
   "永住者",
   "定住者",
-  "日本人の配偶者等",
-  "永住者の配偶者等",
-  "特定技能",
-  "技能実習",
-  "高度専門職",
-  "技術・人文国際・国際業務",
-  "その他、在留資格"
+  "その他"
 ];
 
 const lpContent = document.getElementById("lpContent");
